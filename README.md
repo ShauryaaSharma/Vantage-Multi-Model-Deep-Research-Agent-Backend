@@ -222,10 +222,6 @@ None of this blocks local development or a personal/trusted deployment — it ma
 3. **Kimi K2 connection issues** — verify `ANTHROPIC_BASE_URL=https://api.moonshot.ai/anthropic` and that your Moonshot key is being sent as if it were an Anthropic key (Kimi is routed through Anthropic's API shape).
 4. **Streaming cuts off** — check any reverse proxy/load balancer's idle-timeout settings; the graph itself has no artificial cutoff, but proxies often do.
 
-## License
-
-MIT License — see [LICENSE.txt](LICENSE.txt).
-
 ## Contributing
 
 1. Fork the repository
