@@ -1,10 +1,10 @@
-# 🔬 Deep Research Agent — Backend
+# Deep Research Agent — Backend
 
 A FastAPI backend that runs a multi-stage, multi-model **deep research agent**. Give it a question and one of three model providers, and it clarifies the question if needed, drafts a research brief, runs a multi-tool research loop, and streams the whole process — plus a fully-sourced final report — back to the client in real time over Server-Sent Events (SSE).
 
 It's built on [LangGraph](https://langchain-ai.github.io/langgraph/) (via the [`open_deep_research`](https://github.com/langchain-ai/open_deep_research) research engine), containerized for deployment on Google Cloud Run, and designed to pair with a separate Next.js frontend — [Vantage-Multi-Model-Deep-Research-Agent-Frontend](https://github.com/ShauryaaSharma/Vantage-Multi-Model-Deep-Research-Agent-Frontend) (branded **Vantage** in its UI).
 
-## ✨ Features
+## Features
 
 - **Multi-model support** — OpenAI (GPT-5), Anthropic (Claude 4 Sonnet), and Kimi K2 0905 (via Moonshot AI's Anthropic-compatible endpoint)
 - **Multi-stage research pipeline** — clarify → research brief → supervised multi-tool research → compression → final report, each stage streamed as it happens
@@ -13,7 +13,7 @@ It's built on [LangGraph](https://langchain-ai.github.io/langgraph/) (via the [`
 - **Optional persistence** — comparison sessions can be saved to Supabase; falls back to in-memory storage automatically if unconfigured
 - **Cloud Run ready** — Dockerfile with pinned dependencies for reproducible builds
 
-## 🏗️ Architecture
+## Architecture
 
 For the full picture — the request lifecycle, the LangGraph pipeline node-by-node with diagrams, configuration resolution, and known architectural limitations — see [ARCHITECTURE.md](ARCHITECTURE.md). Quick map of the codebase:
 
@@ -40,7 +40,7 @@ tests/                           The real, automated pytest suite
 
 **Request flow:** `POST /research/stream` → `DeepResearchService.stream_research` builds a `RunnableConfig` carrying the caller's API key → `deep_researcher.astream(...)` runs the LangGraph pipeline → each chunk is converted into a `StreamingEvent` and sent as an SSE `data:` line → on completion, duration/success metrics are recorded (Supabase if configured, otherwise in-memory only, lost on restart).
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -81,7 +81,7 @@ tests/                           The real, automated pytest suite
    curl http://localhost:8080/health
    ```
 
-## 🔧 Environment Variables
+## Environment Variables
 
 All of these are optional for local development — by default, the frontend supplies the model API key on every request. See [`.env.example`](.env.example) for the full, documented list:
 
@@ -97,7 +97,7 @@ All of these are optional for local development — by default, the frontend sup
 
 `GET_API_KEYS_FROM_CONFIG` defaults to `"true"` unless you explicitly set it in your environment (via `os.environ.setdefault`, in [`services/deep_research_service.py`](services/deep_research_service.py)) — so setting it to `false` locally or in Cloud Run genuinely takes effect.
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Health
 ```bash
@@ -128,7 +128,7 @@ POST   /research/compare               # run the same query across multiple mode
 POST   /research/test                  # debug echo endpoint — not gated by environment, avoid exposing publicly
 ```
 
-## 🧪 Testing
+## Testing
 
 The real, automated test suite lives in `tests/` and runs with `pytest` (scoped there by [`pytest.ini`](pytest.ini), so a bare `pytest` from the repo root won't accidentally pick up the manual scripts below):
 
@@ -153,13 +153,13 @@ curl -X POST http://localhost:8080/research/stream \
   -d '{"query": "What are the latest developments in AI?", "model": "anthropic", "api_key": "your_api_key"}'
 ```
 
-## 🗄️ Database (Optional)
+## Database (Optional)
 
 Research history and comparison-session persistence are entirely optional — without Supabase configured, everything is tracked in memory and lost on restart.
 
 To enable it: run [`database_migration/supabase_setup.sql`](database_migration/supabase_setup.sql) once in your Supabase project's SQL Editor (see [`database_migration/README.md`](database_migration/README.md) for exactly what it creates and covers), then set `SUPABASE_URL`/`SUPABASE_ANON_KEY`. Note that only the `/research/compare` comparison-session feature persists to Supabase today — individual `/research/stream` runs are in-memory only regardless of Supabase configuration.
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 The Dockerfile installs from [`requirements.lock`](requirements.lock) — a fully pinned snapshot of `requirements.txt`, generated from a clean Python 3.11 environment — so container builds are reproducible instead of picking up whatever the latest compatible package versions happen to be on build day.
 
@@ -176,7 +176,7 @@ python3.11 -m venv /tmp/lockenv && /tmp/lockenv/bin/pip install -r requirements.
 # pip freeze drops it, and pywin32 has no Linux build
 ```
 
-## ☁️ GCP Cloud Run Deployment
+## GCP Cloud Run Deployment
 
 ```bash
 gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/deep-research-backend
@@ -196,7 +196,7 @@ gcloud run deploy deep-research-backend \
 
 Set any of the environment variables above under **Cloud Run → Service → Edit & Deploy New Revision → Variables** as needed.
 
-## 🔗 Connecting to the Frontend
+## Connecting to the Frontend
 
 ```bash
 # In the frontend's .env.local
@@ -204,7 +204,7 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8080          # local dev
 NEXT_PUBLIC_BACKEND_URL=https://your-backend-url.run.app  # production
 ```
 
-## 🔒 Security notes
+## Security notes
 
 Read this before deploying anywhere beyond local development:
 
@@ -215,18 +215,18 @@ Read this before deploying anywhere beyond local development:
 
 None of this blocks local development or a personal/trusted deployment — it matters once this is exposed to the public internet.
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 1. **HTTP 405 in GCP logs** — fixed by the `HEAD /health` route for Cloud Run health checks.
 2. **Token limit errors** — this is why the service defaults to GPT-5/Claude 4 Sonnet (128k–200k context) rather than older, smaller-context models.
 3. **Kimi K2 connection issues** — verify `ANTHROPIC_BASE_URL=https://api.moonshot.ai/anthropic` and that your Moonshot key is being sent as if it were an Anthropic key (Kimi is routed through Anthropic's API shape).
 4. **Streaming cuts off** — check any reverse proxy/load balancer's idle-timeout settings; the graph itself has no artificial cutoff, but proxies often do.
 
-## 📝 License
+## License
 
 MIT License — see [LICENSE.txt](LICENSE.txt).
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
